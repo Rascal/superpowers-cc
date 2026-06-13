@@ -1,6 +1,6 @@
-# Superpowers Extended for Claude Code
+# Superpowers CC
 
-A community-maintained fork of [obra/superpowers](https://github.com/obra/superpowers) specifically for Claude Code users.
+A personal Claude Code-only fork of [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Why This Fork Exists
 
@@ -22,7 +22,6 @@ This fork integrates Claude Code-native features into the Superpowers workflow.
 | Structured Task Metadata | v2.1.16+ | Goal/Files/AC/Verify structure with embedded `json:metadata` |
 | Pre-commit Task Gate | v2.1.16+ | Plugin hook blocks `git commit` when tasks are incomplete |
 | User-Thrown Gate Enforcement | v2.1.16+ | `userGate` / `user-gate` tag + opt-in hooks force re-validation when Claude closes a user-ordered verification task (see [Recommended Configuration](#recommended-configuration)) |
-| Subagent Model Routing | v2.1.170+ | Opt-in per-task model tiers (`mechanical`/`standard`/`frontier`) route plan-execution subagents to cheaper models (see [Subagent Model Routing](#subagent-model-routing--optional-flow)) |
 | Configurable Commit Strategy | v2.1.16+ | Opt-in `workflow.json` switches plan execution from per-task commits to a single commit at plan end (see [Commit Strategy](#commit-strategy)) |
 
 ## Visual Comparison
@@ -30,7 +29,7 @@ This fork integrates Claude Code-native features into the Superpowers workflow.
 <table>
 <tr>
 <th>Superpowers (Vanilla)</th>
-<th>Superpowers Extended CC</th>
+<th>Superpowers CC</th>
 </tr>
 <tr>
 <td valign="top">
@@ -45,7 +44,7 @@ This fork integrates Claude Code-native features into the Superpowers workflow.
 </td>
 <td valign="top">
 
-![Extended CC](docs/screenshots/extended-cc-session.png)
+![Superpowers CC](docs/screenshots/extended-cc-session.png)
 
 - **Dependency enforcement** - Task 2 blocked until Task 1 completes (no front-running)
 - **Execution on rails** - Native task manager keeps agent following the plan
@@ -62,16 +61,16 @@ This fork integrates Claude Code-native features into the Superpowers workflow.
 
 ```bash
 # Register marketplace
-/plugin marketplace add pcvelz/superpowers
+/plugin marketplace add Rascal/superpowers-cc
 
 # Install plugin
-/plugin install superpowers-extended-cc@superpowers-extended-cc-marketplace
+/plugin install superpowers-cc@superpowers-cc-marketplace
 ```
 
 ### Option 2: Direct URL
 
 ```bash
-/plugin install --source url https://github.com/pcvelz/superpowers.git
+/plugin install --source url https://github.com/Rascal/superpowers-cc.git
 ```
 
 ### Stay Updated (recommended)
@@ -80,12 +79,12 @@ Third-party marketplaces don't auto-update by default — installs stay frozen o
 
 1. Run `/plugin`
 2. Open the **Marketplaces** tab
-3. Toggle **Enable auto-update** on `superpowers-extended-cc-marketplace`
+3. Toggle **Enable auto-update** on `superpowers-cc-marketplace`
 
 Or refresh manually any time:
 
 ```
-/plugin marketplace update superpowers-extended-cc-marketplace
+/plugin marketplace update superpowers-cc-marketplace
 ```
 
 ### Verify Installation
@@ -98,9 +97,9 @@ Check that commands appear:
 
 ```
 # Should see:
-# /superpowers-extended-cc:brainstorming - Interactive design refinement
-# /superpowers-extended-cc:writing-plans - Create implementation plan
-# /superpowers-extended-cc:executing-plans - Execute plan in batches
+# /superpowers-cc:brainstorming - Interactive design refinement
+# /superpowers-cc:writing-plans - Create implementation plan
+# /superpowers-cc:executing-plans - Execute plan in batches
 ```
 
 ## The Basic Workflow
@@ -117,7 +116,7 @@ Check that commands appear:
 
 6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/push/keep/discard), cleans up worktree.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -202,59 +201,6 @@ Tail the hook trace log while a tagged gate task is closing: `tail -F /tmp/claud
 
 ---
 
-## Subagent Model Routing — Optional Flow
-
-*Canonical design doc: [`docs/model-routing-flow.md`](docs/model-routing-flow.md). The section below is a reader-facing summary.*
-
-This flow addresses a cost problem that frontier-priced models (Opus, Fable) made acute: plan execution via `subagent-driven-development` spawns an implementer plus two reviewers per task — plus re-dispatches for fixes and escalations — and every one of them inherits the session model by default. On a top-tier session, a ten-task plan means thirty-plus top-tier subagent dispatches, most doing work a cheaper model handles fine when the plan is well-specified. Prompt caching does not help here: caching discounts input tokens, while fan-out cost is dominated by freshly generated output. Routing lowers the per-token rate of dispatches; it does not impose token budgets or spend ceilings (see the design doc for boundaries).
-
-**The whole flow is opt-in, with a single switch: `docs/superpowers/model-routing.json` in your project.** The enforcement gates ship with the plugin but are dormant — without that file every check no-ops and behavior is byte-identical to vanilla. No settings to edit, no hooks to register.
-
-### How it works — four harness-enforced layers
-
-Skills prose is not enforcement; agents skip instructions under load. So every layer here is executed by the harness, not volunteered by the model:
-
-| Layer | When | What it does |
-|-------|------|--------------|
-| **Session notice** (`session-start` hook) | Session start | Routing file detected → the tier rules and your mapping are injected into context. The agent starts the session already knowing the rules. |
-| **Plan gate** (`pre-taskcreate-model-tier` hook) | Every `TaskCreate` | A plan task without a valid `"modelTier"` in its `json:metadata` fence is blocked — including plan-shaped tasks (template headers or numbered subjects) that omit the fence entirely; the block message contains the full tier table, so the agent fixes and re-issues without reading anything. |
-| **Dispatch gate** (`pre-agent-model-routing` hook) | Every `Agent` dispatch | While tiered tasks are in progress, allows the union of the in-progress tasks' tier models plus the `standard` reviewer model; blocks anything else and names the correct dispatch per role. A concrete `"model"` pin in task metadata overrides the tier (pin enforcement: see [Recommended Configuration](#recommended-configuration)). |
-| **Handoff guard** (`pre-askuser-handoff-guard` hook) | After `writing-plans` creates tasks | When armed, allows `AskUserQuestion` only if it carries the two mandated options ("Subagent-Driven (this session)" / "Parallel Session (separate)") or marks itself as a mid-plan clarification with the literal token `CLARIFICATION` in the question. Blocks custom menus that bypass the execution-method choice and skip the subagent pipeline. |
-
-All three gates fail open (parse errors never brick a session) and share a kill switch: `SUPERPOWERS_ROUTING_GUARD=0`.
-
-### The tiers
-
-| Tier | Meaning |
-|------|---------|
-| `"mechanical"` | Touches 1-2 files, complete spec with code in the steps, no design judgment. Most tasks in a well-specified plan. |
-| `"standard"` | Multi-file coordination, integration concerns, pattern matching, debugging. |
-| `"frontier"` | Design judgment, architecture decisions, broad codebase understanding. |
-
-Tiers are abstract on purpose — plans survive model generations; the routing file decides what they mean today.
-
-### Setup
-
-Prefer a guided setup? Run `/superpowers-extended-cc:onboard` — it asks one multiple-choice question per optional feature and writes the files for you. Manual setup below achieves exactly the same.
-
-Create `docs/superpowers/model-routing.json` in your project:
-
-```json
-{"mechanical": "haiku", "standard": "sonnet", "frontier": "inherit"}
-```
-
-- Keys are the three tiers; values are Agent `model` values (`haiku`, `sonnet`, `opus`, `fable`).
-- `"inherit"` means: omit the model parameter — that tier runs on the session model.
-- Mapping all tiers to one model gives a flat cost cap with no per-task gradation.
-- Delete the file to switch routing off — the gates go dormant instantly; existing tier annotations become inert metadata.
-- **User-level default:** the file may instead live at `~/.claude/superpowers/model-routing.json`, applying to every project that has no project-level file. Lookup is project first, then user — the first file found wins entirely (no merging). A project file of all-`"inherit"` values switches routing off for that project while a user-level default exists.
-
-### Role assignments when routing is on
-
-Implementers (and fix re-dispatches) run at their task's tier. Spec and code-quality reviewers run at `standard` — reviewing against explicit criteria is mid-tier work, and review output is the expensive direction at frontier prices. The final whole-plan reviewer runs after all tasks complete (no task in progress, so the dispatch gate does not constrain it) and should stay at session level — one frontier judgment pass per plan. When an implementer reports BLOCKED and needs more reasoning, escalate one tier up by updating the task's metadata transparently — never silently down.
-
----
-
 ## Workflow Configuration — Optional Flow
 
 *Canonical design doc: [`docs/workflow-config-flow.md`](docs/workflow-config-flow.md). The section below is a reader-facing summary.*
@@ -277,10 +223,10 @@ When `at-end` is set, a notice injected at session start instructs the agent to:
 
 Setup notes:
 
-- Prefer a guided setup? Run `/superpowers-extended-cc:onboard` — it covers this feature alongside the other optional flows.
+- Prefer a guided setup? Run `/superpowers-cc:onboard` — it covers this feature alongside the other optional flows.
 - Valid values are `"per-task"` (the default) and `"at-end"`; anything else falls back to per-task.
 - **User-level default:** the file may instead live at `~/.claude/superpowers/workflow.json`, applying to every project that has no project-level file. Lookup is project first, then user — the first file found wins entirely (no merging). A project file of `{"commitStrategy": "per-task"}` restores per-task commits for that project while a user-level default exists.
-- Unlike model routing, this flow has no enforcement gates — the session-start notice is the only delivery mechanism, so it takes effect from the next session on and relies on plan-time compliance (see the design doc for this boundary).
+- This flow has no enforcement gates — the session-start notice is the only delivery mechanism, so it takes effect from the next session on and relies on plan-time compliance (see the design doc for this boundary).
 - Undo: delete the file or remove the `commitStrategy` key — per-task commits resume at the next session start.
 
 ---
@@ -304,7 +250,7 @@ Setup notes:
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
+- **finishing-a-development-branch** - Merge/push/cleanup decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **User-Thrown Gates** (optional flow, see "User-Thrown Gate Enforcement" above)
@@ -324,16 +270,9 @@ Setup notes:
 
 Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
-## Contributing
+## Making Changes
 
-Contributions for Claude Code-specific enhancements are welcome!
-
-1. Fork this repository
-2. Create a branch for your enhancement
-3. Follow the `writing-skills` skill for creating and testing new skills
-4. Submit a PR
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
+This is a personal fork. To add or modify a skill, follow the `writing-skills` skill — it covers creating and pressure-testing skill content. See `skills/writing-skills/SKILL.md` for the complete guide, and `CLAUDE.md` for the maintainer notes.
 
 ## Recommended Configuration
 
@@ -368,7 +307,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/pre-commit-check-tasks.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-cc-marketplace/hooks/examples/pre-commit-check-tasks.sh"
           }
         ]
       }
@@ -396,7 +335,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/post-task-complete-revalidate.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-cc-marketplace/hooks/examples/post-task-complete-revalidate.sh"
           }
         ]
       }
@@ -422,7 +361,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/stop-revalidate-user-gates.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-cc-marketplace/hooks/examples/stop-revalidate-user-gates.sh"
           }
         ]
       }
@@ -450,7 +389,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/pre-task-blockedby-enforce.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-cc-marketplace/hooks/examples/pre-task-blockedby-enforce.sh"
           }
         ]
       }
@@ -480,7 +419,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/pre-agent-task-dispatch-validate.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-cc-marketplace/hooks/examples/pre-agent-task-dispatch-validate.sh"
           }
         ]
       }
@@ -508,7 +447,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/post-agent-return-validate.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-cc-marketplace/hooks/examples/post-agent-return-validate.sh"
           }
         ]
       }
@@ -544,7 +483,7 @@ Opt in via `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-extended-cc-marketplace/hooks/examples/stop-deflection-guard.sh"
+            "command": "bash ~/.claude/plugins/marketplaces/superpowers-cc-marketplace/hooks/examples/stop-deflection-guard.sh"
           }
         ]
       }
@@ -560,7 +499,7 @@ See the header of `hooks/examples/stop-deflection-guard.sh` for the full list of
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers-extended-cc@superpowers-extended-cc-marketplace
+/plugin update superpowers-cc@superpowers-cc-marketplace
 ```
 
 ## Upstream Compatibility
@@ -573,5 +512,5 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/pcvelz/superpowers/issues
+- **Issues**: https://github.com/Rascal/superpowers-cc/issues
 - **Upstream**: https://github.com/obra/superpowers

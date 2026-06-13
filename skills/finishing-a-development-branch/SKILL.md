@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, push, or cleanup
 ---
 
 # Finishing a Development Branch
@@ -30,7 +30,7 @@ Tests failing (<N> failures). Must fix before completing:
 
 [Show failures]
 
-Cannot proceed with merge/PR until tests pass.
+Cannot proceed with merge/push until tests pass.
 ```
 
 Stop. Don't proceed to Step 2.
@@ -71,7 +71,7 @@ Or ask: "This branch split from main - is that correct?"
 Implementation complete. What would you like to do?
 
 1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
+2. Push the branch (you'll open the PR yourself)
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
 
@@ -83,7 +83,7 @@ Which option?
 ```
 Implementation complete. You're on a detached HEAD (externally managed workspace).
 
-1. Push as new branch and create a Pull Request
+1. Push as a new branch (you'll open the PR yourself)
 2. Keep as-is (I'll handle it later)
 3. Discard this work
 
@@ -118,24 +118,16 @@ Then: Cleanup worktree (Step 6), then delete branch:
 git branch -d <feature-branch>
 ```
 
-#### Option 2: Push and Create PR
+#### Option 2: Push the Branch
 
 ```bash
-# Push branch
+# Push branch and set upstream — the user opens the PR themselves
 git push -u origin <feature-branch>
-
-# Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
-## Summary
-<2-3 bullets of what changed>
-
-## Test Plan
-- [ ] <verification steps>
-EOF
-)"
 ```
 
-**Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
+Report the pushed branch name (and remote URL if `git remote get-url origin` returns one) so the user can open the PR manually. Do NOT run `gh pr create` or otherwise open a PR — the user always does that themselves.
+
+**Do NOT clean up worktree** — the user needs it alive to open the PR and iterate.
 
 #### Option 3: Keep As-Is
 
@@ -196,14 +188,14 @@ git worktree prune  # Self-healing: clean up any stale registrations
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
 | 1. Merge locally | yes | - | - | yes |
-| 2. Create PR | - | yes | yes | - |
+| 2. Push branch | - | yes | yes | - |
 | 3. Keep as-is | - | - | yes | - |
 | 4. Discard | - | - | - | yes (force) |
 
 ## Common Mistakes
 
 **Skipping test verification**
-- **Problem:** Merge broken code, create failing PR
+- **Problem:** Merge or push broken code
 - **Fix:** Always verify tests before offering options
 
 **Open-ended questions**
@@ -211,7 +203,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - **Fix:** Present exactly 4 structured options (or 3 for detached HEAD)
 
 **Cleaning up worktree for Option 2**
-- **Problem:** Remove worktree user needs for PR iteration
+- **Problem:** Remove worktree the user needs to open the PR and iterate
 - **Fix:** Only cleanup for Options 1 and 4
 
 **Deleting branch before removing worktree**

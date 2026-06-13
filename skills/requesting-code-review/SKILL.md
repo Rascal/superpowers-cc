@@ -31,7 +31,11 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code reviewer subagent:**
 
-Use Task tool with `general-purpose` type, fill template at `code-reviewer.md`
+Use the Agent tool. Two native options:
+- **`subagent_type: code-reviewer`** — the harness's purpose-built reviewer agent. Preferred for a structured review with no template wrangling; pass it the description, requirements, and git range.
+- **`subagent_type: general-purpose`** with the `code-reviewer.md` template filled in — use when you want the exact output format and calibration rules in that template.
+
+For a quick review of the current working-tree/branch diff, the native `/code-review` skill is also available (and `/security-review` for a security pass).
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built

@@ -1,13 +1,13 @@
 {
-  "name": "superpowers-extended-cc",
-  "description": "Claude Code-specific fork of Superpowers with native task management and CC-specific enhancements",
+  "name": "superpowers-cc",
+  "description": "Claude Code-only Superpowers: native task management and CC-specific workflow skills",
   "version": "6.0.2-dev",
   "author": {
-    "name": "pcvelz",
-    "email": "pcvelz@users.noreply.github.com"
+    "name": "Rascal",
+    "email": "anton@bobrik.org"
   },
-  "homepage": "https://github.com/pcvelz/superpowers",
-  "repository": "https://github.com/pcvelz/superpowers",
+  "homepage": "https://github.com/Rascal/superpowers-cc",
+  "repository": "https://github.com/Rascal/superpowers-cc",
   "license": "MIT",
   "keywords": [
     "skills",

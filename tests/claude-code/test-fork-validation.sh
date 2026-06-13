@@ -9,12 +9,12 @@ FAILED=0
 echo "=== Test: Fork Validation ==="
 echo ""
 
-# 1. Plugin name must be superpowers-extended-cc in metadata
+# 1. Plugin name must be superpowers-cc in metadata
 echo "Test 1: Plugin name consistency..."
 NAME_FAIL=0
 for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json; do
-    if ! grep -q "superpowers-extended-cc" "$REPO_ROOT/$f"; then
-        echo "  [FAIL] $f missing superpowers-extended-cc"
+    if ! grep -q "superpowers-cc" "$REPO_ROOT/$f"; then
+        echo "  [FAIL] $f missing superpowers-cc"
         NAME_FAIL=$((NAME_FAIL + 1))
     fi
 done
@@ -38,17 +38,17 @@ else
     echo "  [PASS] No legacy task references"
 fi
 
-# 3. Skill references use superpowers-extended-cc: prefix (not bare superpowers:)
+# 3. Skill references use superpowers-cc: prefix (not bare superpowers:)
 echo "Test 3: Skill prefix consistency..."
 BARE=$(grep -rn "superpowers:" "$REPO_ROOT/skills/" "$REPO_ROOT/commands/" "$REPO_ROOT/hooks/" 2>/dev/null \
-    | grep -v "superpowers-extended-cc:" \
-    | grep -v "superpowers-extended-cc" \
+    | grep -v "superpowers-cc:" \
+    | grep -v "superpowers-cc" \
     | grep -v "obra/superpowers" \
     | grep -v "github.com" \
     | grep -v "\.git" \
     || true)
 if [ -n "$BARE" ]; then
-    echo "  [FAIL] Found bare 'superpowers:' prefix (should be superpowers-extended-cc:):"
+    echo "  [FAIL] Found bare 'superpowers:' prefix (should be superpowers-cc:):"
     echo "$BARE"
     FAILED=$((FAILED + 1))
 else

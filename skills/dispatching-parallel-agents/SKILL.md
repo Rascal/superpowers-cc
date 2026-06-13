@@ -13,6 +13,8 @@ When you have multiple unrelated failures (different test files, different subsy
 
 **Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
 
+**Ad-hoc parallelism vs. orchestration:** for a handful of independent problems, dispatch parallel `Agent` calls in one message (this skill). When the fan-out is large, repeated, or needs deterministic stages (fan-out → verify → synthesize), the native `Workflow` tool orchestrates many subagents from a script and is the better fit — but it only runs when the user has explicitly opted into multi-agent orchestration.
+
 ## When to Use
 
 ```dot
@@ -65,13 +67,15 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// All three run concurrently
+Send all the Agent tool calls in a SINGLE message so they run concurrently:
+
 ```
+Agent(subagent_type: general-purpose, prompt: "Fix agent-tool-abort.test.ts failures …")
+Agent(subagent_type: general-purpose, prompt: "Fix batch-completion-behavior.test.ts failures …")
+Agent(subagent_type: general-purpose, prompt: "Fix tool-approval-race-conditions.test.ts failures …")
+```
+
+Multiple Agent calls in one assistant message are dispatched in parallel; calls in separate messages run sequentially.
 
 ### 4. Review and Integrate
 

@@ -63,7 +63,7 @@ digraph process {
     "Read plan, extract tasks, TaskCreate for each with full text" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
-    "Use superpowers-extended-cc:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use superpowers-cc:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract tasks, TaskCreate for each with full text" -> "Dispatch implementer subagent (skills/subagent-driven-development/implementer-prompt.md)";
     "Dispatch implementer subagent (skills/subagent-driven-development/implementer-prompt.md)" -> "Implementer subagent asks questions?";
@@ -82,7 +82,7 @@ digraph process {
     "TaskUpdate: mark task completed" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (skills/subagent-driven-development/implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers-extended-cc:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers-cc:finishing-a-development-branch";
 }
 ```
 
@@ -95,18 +95,9 @@ When dispatching an implementer subagent:
 
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Subagents inherit the session model by default — omit the `model` parameter on Agent dispatches unless you have a specific reason to override it. The default is almost always correct: a fresh subagent on the session model reasons about the task at full capability.
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
-
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
-
-**Architecture, design, and review tasks**: use the most capable available model.
-
-**Task complexity signals:**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+Only pin a `model` when the task genuinely calls for a different tier and you are confident of the choice (and no higher-priority instruction, e.g. a CLAUDE.md rule, dictates the model for all subagents). When unsure, omit it.
 
 ## Handling Implementer Status
 
@@ -284,7 +275,7 @@ The Red Flag above forbids overlapping writers, not parallelism. Dispatch concur
 - **Read-only agents are always parallel-safe**: audits, log analysis, verification gates, long-running test suites (these are also ideal for free local agent types while implementation continues).
 - **Implementers may run concurrently ONLY when** their tasks' `files` lists share no path AND neither task appears in the other's `blockedBy` chain. The `files` metadata IS the test — no overlap means no conflict.
 - **Never** two writers on one file, and never use parallelism to skip reviews: each task still gets its own spec + quality review as it completes.
-- Mark every parallel task `in_progress` BEFORE dispatching its agent — model routing resolves each dispatch against the union of in-progress tiers, and an unmarked task's dispatch will be blocked against the wrong tier.
+- Mark every parallel task `in_progress` BEFORE dispatching its agent, so TaskList reflects the true set of running work and the coordinator's view stays accurate.
 - When overlap is uncertain, serialize. The sequential per-task loop above remains the default; parallelism is the optimization, not the baseline.
 
 ## Task Persistence Sync
@@ -301,13 +292,13 @@ This ensures cross-session resume works correctly. Without this, a new session l
 ## Integration
 
 **Required workflow skills:**
-- **superpowers-extended-cc:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers-extended-cc:writing-plans** - Creates the plan this skill executes
-- **superpowers-extended-cc:requesting-code-review** - Code review template for reviewer subagents
-- **superpowers-extended-cc:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers-cc:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **superpowers-cc:writing-plans** - Creates the plan this skill executes
+- **superpowers-cc:requesting-code-review** - Code review template for reviewer subagents
+- **superpowers-cc:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
-- **superpowers-extended-cc:test-driven-development** - Subagents follow TDD for each task
+- **superpowers-cc:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **superpowers-extended-cc:executing-plans** - Use for parallel session instead of same-session execution
+- **superpowers-cc:executing-plans** - Use for parallel session instead of same-session execution

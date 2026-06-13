@@ -1,6 +1,6 @@
 # Workflow Configuration (Commit Strategy) — Design
 
-Canonical design document for the opt-in workflow-configuration flow. The README section "Commit Strategy" is the reader-facing summary; this file holds the rationale, the architecture decisions, and the boundaries. The flow follows the same philosophy as `docs/model-routing-flow.md`: opt-in via config-file presence, knowledge delivered deterministically at session start, zero changes to skill prose, fail-open everywhere.
+Canonical design document for the opt-in workflow-configuration flow. The README section "Commit Strategy" is the reader-facing summary; this file holds the rationale, the architecture decisions, and the boundaries. Design philosophy: opt-in via config-file presence, knowledge delivered deterministically at session start, zero changes to skill prose, fail-open everywhere.
 
 ## The problem
 
@@ -8,7 +8,7 @@ Plan execution commits per task, by construction: the `writing-plans` Task Struc
 
 ## Design decisions
 
-**One config file, one key.** `docs/superpowers/workflow.json`, project-level, with a user-level fallback at `~/.claude/superpowers/workflow.json`. Lookup is project first, then user — the first file found wins entirely, no merging (the same lookup pattern as `model-routing.json`). Content:
+**One config file, one key.** `docs/superpowers/workflow.json`, project-level, with a user-level fallback at `~/.claude/superpowers/workflow.json`. Lookup is project first, then user — the first file found wins entirely, no merging. Content:
 
 ```json
 {"commitStrategy": "at-end"}
@@ -20,7 +20,7 @@ Valid values: `"per-task"` (the default) and `"at-end"`. Absent file, absent key
 
 **The config file is hostile content.** It is project-controlled, so the hook sanitizes it with the same pass as the routing file (`LC_ALL=C tr -d '[:cntrl:]'` + `iconv -c`) before parsing. The extracted value is only compared against `"at-end"`, never embedded in the emitted JSON.
 
-**No enforcement gates in v1 — a deliberate, documented boundary.** Model routing got gates because uncontrolled cost is an invariant worth enforcing per tool call. Commit strategy is a workflow preference, not a cost or safety invariant: the failure mode of non-compliance is extra commits — today's default behavior, fully recoverable with an interactive rebase. Soft delivery via the session notice is the accepted reliability tradeoff. This means compliance depends on the agent honoring the notice at plan-writing and dispatch time; there is no hook that blocks a plan task containing a Commit step or an implementer prompt containing a commit instruction.
+**No enforcement gates in v1 — a deliberate, documented boundary.** Commit strategy is a workflow preference, not a cost or safety invariant: the failure mode of non-compliance is extra commits — today's default behavior, fully recoverable with an interactive rebase. Soft delivery via the session notice is the accepted reliability tradeoff. This means compliance depends on the agent honoring the notice at plan-writing and dispatch time; there is no hook that blocks a plan task containing a Commit step or an implementer prompt containing a commit instruction.
 
 **Fail-open everywhere.** Unreadable file, invalid JSON, control bytes, unknown values: the hook emits no notice and behavior stays per-task. A typo in the config must not brick a session or surprise anyone with a behavior change.
 
@@ -29,7 +29,7 @@ Valid values: `"per-task"` (the default) and `"at-end"`. Absent file, absent key
 - **No enforcement gate.** The notice is the only mechanism; it relies on plan-time and dispatch-time compliance. Plans written before the config existed keep their per-task Commit steps — the notice does not rewrite existing plans.
 - **No commit policy.** Message format, signing, branch protection, push behavior are out of scope; the key only decides *when* plan execution commits.
 - **No partial-progress safety net at `at-end`.** With a single final commit, a mid-plan failure leaves all changes uncommitted in the working tree. That is inherent to the chosen strategy; teams who want incremental recovery points should stay on the default.
-- **No merging of project and user files.** The first file found wins entirely, exactly like model routing.
+- **No merging of project and user files.** The first file found wins entirely.
 
 ## Future directions (explicitly out of scope today)
 
