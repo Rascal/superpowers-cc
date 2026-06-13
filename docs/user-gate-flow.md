@@ -232,7 +232,7 @@ All design-doc open items have been delivered:
 
 - ✅ Gate-language detector step in `writing-plans` Step 1 (mechanical keyword table).
 - ✅ `requiresUserSpecification`, `gateScope`, `failurePolicy`, `subagentBrief` rows added to the metadata table.
-- ✅ End-to-end integration test at `tests/claude-code/test-user-gate-hooks.sh` (10 test cases including idempotency regression).
+- ✅ End-to-end hook coverage was delivered for the user-gate hooks (10 cases including an idempotency regression). The test suite has since been removed from this fork.
 - ✅ README section distinguishes surgical (always-on) vs. activated (hook-gated) improvements.
 - ✅ Per-task isolation self-check added to `writing-plans` Step 5 (catches the "sibling-bleed" pattern where concrete per-op context masks a vague final task).
 
