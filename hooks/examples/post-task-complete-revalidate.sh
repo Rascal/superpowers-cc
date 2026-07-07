@@ -439,7 +439,7 @@ if [[ "$IS_GATE" != "true" ]]; then
     exit 2
 fi
 
-# Gate path — existing longer stderr with the /gate-check routing.
+# Gate path — existing longer stderr with the checking-gates routing.
 {
     echo "USER-GATE CLOSED — SELF-ASSESS BEFORE RE-VALIDATING"
     echo
@@ -459,17 +459,18 @@ fi
     echo "through the user-gate flow — do NOT just reclose it:"
     echo
     echo "    1. TaskUpdate taskId=$TASK_ID status=in_progress"
-    echo "    2. /gate-check $TASK_ID"
+    echo "    2. Invoke the superpowers-cc:checking-gates skill for task $TASK_ID"
     echo
-    echo "/gate-check runs the 'do I know HOW?' self-check, then either executes"
-    echo "the verification with captured evidence OR hands off to /specify-gate"
-    echo "when the HOW is ambiguous. It posts one line per acceptance criterion:"
+    echo "checking-gates runs the 'do I know HOW?' self-check, then either executes"
+    echo "the verification with captured evidence OR hands off to the"
+    echo "superpowers-cc:specifying-gates skill when the HOW is ambiguous."
+    echo "It posts one line per acceptance criterion:"
     echo "    AC: <criterion> — PROVEN BY <evidence>"
     echo
     echo "Acceptance criteria on record:"
     echo "$CRITERIA_JSON" | jq -r '.[] | "  - " + .' 2>/dev/null || true
     echo
-    echo "If /gate-check is not installed in this harness, post the AC: lines"
+    echo "If the checking-gates skill is not available, post the AC: lines"
     echo "inline by running the verification yourself. Either way, do NOT move"
     echo "on without concrete evidence per criterion."
     echo "(To disable this check, set SUPERPOWERS_USERGATE_GUARD=0.)"

@@ -39,21 +39,21 @@ Additional requirement: the whole enforcement apparatus is **opt-in**. Installin
   │   ACTIVATED FLOW — only when the opt-in hook is registered   │
   │                                                              │
   │   Hook (PostToolUse / Stop)                                  │
-  │     └─▶ /gate-check <task-id>   (do-I-know-HOW? self-check)  │
+  │     └─▶ checking-gates skill    (do-I-know-HOW? self-check)  │
   │            ├─▶ HOW clear      → run verify, post AC:…PROVEN  │
-  │            └─▶ HOW ambiguous  → /specify-gate <task-id>      │
+  │            └─▶ HOW ambiguous  → specifying-gates skill       │
   │                                    ├─▶ 4 AskUserQuestion     │
   │                                    └─▶ rewrite metadata      │
-  │                                    re-enter /gate-check      │
+  │                                    re-enter checking-gates   │
   │                                                              │
-  │   Without the hook registered, /gate-check and /specify-gate │
-  │   sit dormant. Nothing forces them to run.                   │
+  │   Without the hook registered, checking-gates and            │
+  │   specifying-gates sit dormant. Nothing forces them to run.  │
   └──────────────────────────────────────────────────────────────┘
 ```
 
-### Why keep `/gate-check` out of executing-plans
+### Why keep `checking-gates` out of executing-plans
 
-Earlier drafts tried to put the "do I know HOW?" self-check inline into `executing-plans`. That pollutes a general-purpose skill with enforcement logic only some users want. Extracting it into its own slash command + skill means:
+Earlier drafts tried to put the "do I know HOW?" self-check inline into `executing-plans`. That pollutes a general-purpose skill with enforcement logic only some users want. Extracting it into its own skill means:
 
 - Users without the hook installed get untouched `executing-plans`.
 - Users with the hook installed get a focused, scoped handler they can read end-to-end.
@@ -63,10 +63,10 @@ Earlier drafts tried to put the "do I know HOW?" self-check inline into `executi
 
 | State | What happens when executing-plans hits a user-gate task |
 |-------|----------------------------------------------------------|
-| **Hook ON** (registered in `.claude/settings.json`) | Hook stderr nudges the agent to run `/gate-check <task-id>`. That command runs the do-I-know-HOW self-check and either executes the verification with captured evidence or hands off to `/specify-gate`. Task closes only after `AC: <criterion> — PROVEN BY <evidence>` lines are posted. |
-| **Hook OFF** (default) | Regular `executing-plans` flow. The surgical improvements still apply (agent runs the verifyCommand as specified, captures output), but there is no forced routing, no slash command invocation, no interactive questioner. `/gate-check` and `/specify-gate` exist but are never auto-triggered. |
+| **Hook ON** (registered in `.claude/settings.json`) | Hook stderr nudges the agent to invoke the `checking-gates` skill for the task. That skill runs the do-I-know-HOW self-check and either executes the verification with captured evidence or hands off to `specifying-gates`. Task closes only after `AC: <criterion> — PROVEN BY <evidence>` lines are posted. |
+| **Hook OFF** (default) | Regular `executing-plans` flow. The surgical improvements still apply (agent runs the verifyCommand as specified, captures output), but there is no forced routing, no skill invocation, no interactive questioner. `checking-gates` and `specifying-gates` exist but are never auto-triggered. |
 
-**Crucial:** installing the plugin does not enable the flow. The flow activates only when you explicitly add the hook to `.claude/settings.json`. Remove the hook entry and the flow deactivates — the slash commands remain available for manual use but no longer run automatically.
+**Crucial:** installing the plugin does not enable the flow. The flow activates only when you explicitly add the hook to `.claude/settings.json`. Remove the hook entry and the flow deactivates — the skills remain available for manual invocation (`/superpowers-cc:checking-gates <task-id>`, `/superpowers-cc:specifying-gates <task-id>`) but no longer run automatically.
 
 ## Layer 1 — writing-plans (silent tagging)
 
@@ -113,18 +113,18 @@ When the user's message leaves the HOW ambiguous ("check it works", "make sure i
 {"userGate": true, "tags": ["user-gate"], "requiresUserSpecification": true}
 ```
 
-This flag is Layer 2's signal to invoke `/specify-gate` on first touch, regardless of the agent's self-assessment.
+This flag is Layer 2's signal to invoke `specifying-gates` on first touch, regardless of the agent's self-assessment.
 
 **No user questions during write-plan.** The opinionated default is "tag it and move on".
 
-## Layer 2 — `/gate-check` (separate command, hook-activated)
+## Layer 2 — `checking-gates` (separate skill, hook-activated)
 
-Runs the do-I-know-HOW? self-check in isolation and either executes the verification or routes to `/specify-gate`. Lives in `skills/checking-gates/SKILL.md`.
+Runs the do-I-know-HOW? self-check in isolation and either executes the verification or routes to `specifying-gates`. Lives in `skills/checking-gates/SKILL.md`.
 
 ### When it runs
 
 - The opt-in hook emitted stderr telling the agent to run it (auto).
-- The user invoked `/gate-check <task-id>` manually.
+- The user invoked `/superpowers-cc:checking-gates <task-id>` manually.
 - The agent chose to run it at start of a user-gate task (optional discipline when hook is active).
 
 ### The do-I-know-HOW? rule
@@ -135,7 +135,7 @@ A criterion has a clear HOW when all three hold:
 2. **Capture method named** — the command, API call, subagent, or direct read that produces the observable.
 3. **Pass/fail rule named** — an exact value, regex, or threshold. Not "reasonable" or "correct".
 
-If any of the three is missing for any criterion → the HOW is ambiguous → hand off to `/specify-gate`.
+If any of the three is missing for any criterion → the HOW is ambiguous → hand off to `specifying-gates`.
 
 **Err on the side of ambiguity.** Inventing a HOW silently is the exact failure this flow exists to prevent.
 
@@ -151,11 +151,11 @@ AC: <criterion 2> — PROVEN BY <...>
 
 Then `TaskUpdate status=completed`.
 
-## Layer 3 — `/specify-gate` (separate command, interactive)
+## Layer 3 — `specifying-gates` (separate skill, interactive)
 
 Lives in `skills/specifying-gates/SKILL.md`. Asks the user 3–5 short AskUserQuestion questions (outcome / mechanism / scope / failure policy / optional subagent dispatch contract), rewrites the task's metadata fence, removes `requiresUserSpecification`, appends a human-readable Specification section to the task description, and returns control.
 
-Does NOT run verification. That's `/gate-check`'s job.
+Does NOT run verification. That's `checking-gates`' job.
 
 ## Hooks — activation layer
 
@@ -163,8 +163,8 @@ Both opt-in via `.claude/settings.json`. See README "Recommended Configuration" 
 
 | Hook | Event | Trigger | Stderr message points at |
 |------|-------|---------|--------------------------|
-| `post-task-complete-revalidate.sh` | `PostToolUse` matcher=`TaskUpdate` | `status=completed` on a user-gate task without `AC:…PROVEN BY` evidence posted | `/gate-check <task-id>` |
-| `stop-revalidate-user-gates.sh` | `Stop` | Completion keywords ("plan complete", "both gates passed", …) + at least one closed user-gate task lacking evidence | `/gate-check <task-id>` |
+| `post-task-complete-revalidate.sh` | `PostToolUse` matcher=`TaskUpdate` | `status=completed` on a user-gate task without `AC:…PROVEN BY` evidence posted | `checking-gates` skill |
+| `stop-revalidate-user-gates.sh` | `Stop` | Completion keywords ("plan complete", "both gates passed", …) + at least one closed user-gate task lacking evidence | `checking-gates` skill |
 
 Both hooks fail-open on error. Escape hatches: `SUPERPOWERS_USERGATE_GUARD=0`, `SUPERPOWERS_USERGATE_STOP_GUARD=0`.
 
@@ -190,10 +190,10 @@ No user questions asked. Plan is written and saved.
 **Layer 2 — executing-plans reaches Task 7:**
 
 1. Agent marks Task 7 `in_progress`.
-2. Hook is active → agent runs `/gate-check 7`.
-3. `/gate-check` loads metadata, sees `requiresUserSpecification: true`, hands off to `/specify-gate 7`.
+2. Hook is active → agent invokes `checking-gates` for Task 7.
+3. `checking-gates` loads metadata, sees `requiresUserSpecification: true`, hands off to `specifying-gates` for Task 7.
 
-**Layer 3 — `/specify-gate 7`:**
+**Layer 3 — `specifying-gates` (Task 7):**
 
 Four questions. User answers:
 - **Outcome:** "`sensor.marstek_battery_<suffix>_optimization_status` reads `idle` AND JIT notification fires within 10s of recalculate"
@@ -202,9 +202,9 @@ Four questions. User answers:
 - **Failure:** "reopen the task, do not block the plan"
 - **Subagent brief:** *(user pastes the briefing template)*
 
-Metadata updated, `requiresUserSpecification` removed. Returns control to `/gate-check 7`.
+Metadata updated, `requiresUserSpecification` removed. Returns control to `checking-gates`.
 
-**Back in `/gate-check 7`:**
+**Back in `checking-gates` (Task 7):**
 
 HOW is now concrete on all three axes. Dispatch the Sonnet subagent, capture the real output, post:
 

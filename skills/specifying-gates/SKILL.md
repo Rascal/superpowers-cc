@@ -10,8 +10,8 @@ description: Use when a user-gate task has requiresUserSpecification=true OR the
 Exactly one of:
 
 1. A user-gate task has `"requiresUserSpecification": true` in its `json:metadata` fence, OR
-2. The agent ran the "do I know HOW?" self-check (see `executing-plans`) and concluded the verification mechanics are ambiguous, OR
-3. The user ran `/specify-gate <task-id>` manually.
+2. The agent ran the "do I know HOW?" self-check (see `checking-gates`) and concluded the verification mechanics are ambiguous, OR
+3. The user invoked `/superpowers-cc:specifying-gates <task-id>` manually.
 
 In all other cases — where `verifyCommand` is concrete and every `acceptanceCriteria` has an observable proof — the agent executes the gate directly and does NOT invoke this skill.
 
@@ -20,7 +20,7 @@ In all other cases — where `verifyCommand` is concrete and every `acceptanceCr
 ## CRITICAL — what this skill does NOT do
 
 - Does not run the verification command. Specification only.
-- Does not close the task. It only enriches metadata; the agent returns to `executing-plans` afterward.
+- Does not close the task. It only enriches metadata; the agent returns to `checking-gates` afterward.
 - Does not re-run brainstorming. The design is already decided; only the HOW of one gate is missing.
 
 ## Input
@@ -60,7 +60,7 @@ AskUserQuestion:
     - label: "REST / API call"
       description: "HTTP request, inspect response"
     - label: "Subagent with briefing"
-      description: "Dispatch Sonnet or Haiku with a prompt template"
+      description: "Dispatch a subagent with a prompt template"
     - label: "Direct inspection"
       description: "Read a file, query an entity, check a log"
 ```
@@ -144,7 +144,7 @@ After all questions answered:
 2. **Append a "Specification" section** to the human-readable part of the task description, above the `json:metadata` fence:
 
 ```markdown
-### Specification (via /specify-gate on <ISO-date>)
+### Specification (via specifying-gates on <ISO-date>)
 
 - **Outcome:** <Q1>
 - **Mechanism:** <Q2>
@@ -155,21 +155,21 @@ After all questions answered:
 
 3. **Sync `.tasks.json`.** Update the task entry's description and metadata, set `lastUpdated`.
 
-4. **Announce:** "Specification locked. Returning control to executing-plans to run the gate."
+4. **Announce:** "Specification locked. Returning to checking-gates to run the gate."
 
 ## Handoff
 
-Control returns to `executing-plans`. The agent reads the updated task, executes `verifyCommand` (or dispatches the subagent with `subagentBrief`), captures output, and posts `AC: <criterion> — PROVEN BY <evidence>` per criterion before closing.
+Control returns to `checking-gates`, which re-enters at its Step 1 with the enriched metadata: it executes `verifyCommand` (or dispatches the subagent with `subagentBrief`), captures output, and posts `AC: <criterion> — PROVEN BY <evidence>` per criterion before closing.
 
 ## What NOT to do in this skill
 
 - Do NOT invoke `ExitPlanMode` or `EnterPlanMode`.
-- Do NOT start the verification. The verification runs back in `executing-plans` after this skill exits.
+- Do NOT start the verification. The verification runs back in `checking-gates` after this skill exits.
 - Do NOT ask more than 4-5 questions. If the user's answers feel insufficient, prefer reopening with one follow-up over piling additional questions into the initial flow.
 - Do NOT write to disk anything other than the task description and `.tasks.json`. No side files.
 
 ## Integration
 
-- **Invoked from:** `executing-plans` (automatic), `/specify-gate` slash command (manual).
-- **Returns to:** `executing-plans`.
+- **Invoked from:** `checking-gates` (automatic), `/superpowers-cc:specifying-gates` (manual).
+- **Returns to:** `checking-gates`.
 - **References:** `skills/shared/task-format-reference.md` for metadata schema.

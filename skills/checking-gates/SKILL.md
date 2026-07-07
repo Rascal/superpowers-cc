@@ -17,9 +17,9 @@ User-gate enforcement is an **opt-in flow**. When the opt-in hook is not registe
 
 Any one of:
 
-1. You are about to start a task whose `json:metadata` has `"userGate": true` or whose `tags` contains `"user-gate"` AND the opt-in hook is active (see the README for how to detect this — if you were invoked via `/gate-check`, the hook is active by definition).
-2. A hook fired stderr telling you to run `/gate-check <task-id>`.
-3. The user manually ran `/gate-check <task-id>`.
+1. You are about to start a task whose `json:metadata` has `"userGate": true` or whose `tags` contains `"user-gate"` AND the opt-in hook is active (see the README for how to detect this — if a hook told you to run this skill, the hook is active by definition).
+2. A hook fired stderr telling you to invoke this skill for a task.
+3. The user manually invoked `/superpowers-cc:checking-gates <task-id>`.
 
 If none of these apply, return to executing-plans without running this skill.
 
@@ -38,7 +38,7 @@ If none of these apply, return to executing-plans without running this skill.
 
 ### Step 2 — Route
 
-**Path A — HOW is ambiguous.** Invoke `specifying-gates` (or tell the user to run `/specify-gate <task-id>`). Stop. Let that skill lock down the mechanics. When it returns, re-enter this skill from Step 1.
+**Path A — HOW is ambiguous.** Invoke `specifying-gates`. Stop. Let that skill lock down the mechanics. When it returns, re-enter this skill from Step 1.
 
 **Path B — HOW is clear.** Continue to Step 3.
 
@@ -77,12 +77,12 @@ If any of the three is missing for any criterion, HOW is NOT clear → Path A.
 
 - Do NOT modify executing-plans' behavior from inside this skill. This skill is a leaf — it returns control when done.
 - Do NOT invoke `EnterPlanMode` or `ExitPlanMode`.
-- Do NOT substitute a cheaper verification for the one specified. If you think the spec is wrong, reopen via `/specify-gate` — don't walk around it.
+- Do NOT substitute a cheaper verification for the one specified. If you think the spec is wrong, reopen via `specifying-gates` — don't walk around it.
 - Do NOT close the task if any criterion lacks concrete evidence. "Looks fine" is not evidence.
 
 ## Integration
 
-- **Invoked from:** the PostToolUse / PreToolUse user-gate hook; or `/gate-check` slash command.
+- **Invoked from:** the PostToolUse / PreToolUse user-gate hook; or `/superpowers-cc:checking-gates` manually.
 - **May hand off to:** `specifying-gates` (Path A).
 - **Returns to:** `executing-plans` (or wherever it was invoked from) after TaskUpdate.
 - **References:** `skills/shared/task-format-reference.md` for metadata schema.

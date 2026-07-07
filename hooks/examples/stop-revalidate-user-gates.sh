@@ -235,18 +235,18 @@ trace "block" "unproven_gates=$BLOCKED_COUNT"
     echo
     echo "$RESULT" | jq -r '.blocked_gates[] | "  - Task #" + .id + ": " + .subject' 2>/dev/null || true
     echo
-    echo "Before stopping, reopen each listed gate and run /gate-check on it:"
+    echo "Before stopping, reopen each listed gate and run checking-gates on it:"
     echo
     echo "    1. TaskUpdate taskId=<id> status=in_progress"
-    echo "    2. /gate-check <id>"
+    echo "    2. Invoke the superpowers-cc:checking-gates skill for task <id>"
     echo
-    echo "/gate-check posts evidence in the shape this hook recognises:"
+    echo "checking-gates posts evidence in the shape this hook recognises:"
     echo
     echo "  Gate: <subject>"
     echo "  AC: <criterion> — PROVEN BY <exact command/output/subagent result>"
     echo "  AC: <criterion> — PROVEN BY <...>"
     echo
-    echo "If /gate-check is not installed, post the AC: lines inline by running"
+    echo "If the checking-gates skill is not available, post the AC: lines inline by running"
     echo "the verification yourself. If a gate cannot be proven right now,"
     echo "reopen it and retract the completion claim above."
     echo "(To disable this check, set SUPERPOWERS_USERGATE_STOP_GUARD=0.)"

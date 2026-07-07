@@ -11,8 +11,7 @@ This fork integrates Claude Code-native features into the Superpowers workflow.
 ### What We Do Differently
 
 - Leverage Claude Code-native features as they're released
-- Community-driven - contributions welcome for any CC-specific enhancement
-- Track upstream - stay compatible with obra/superpowers core workflow
+- Personal fork — maintained for one workflow, not as a community project
 
 ### Current Enhancements
 
@@ -89,17 +88,14 @@ Or refresh manually any time:
 
 ### Verify Installation
 
-Check that commands appear:
-
-```bash
-/help
-```
+Check that the skills appear in the slash-command palette:
 
 ```
-# Should see:
-# /superpowers-cc:brainstorming - Interactive design refinement
-# /superpowers-cc:writing-plans - Create implementation plan
-# /superpowers-cc:executing-plans - Execute plan in batches
+# Should see (among others):
+# /superpowers-cc:brainstorming
+# /superpowers-cc:writing-plans
+# /superpowers-cc:executing-plans
+# /superpowers-cc:onboard
 ```
 
 ## The Basic Workflow
@@ -158,7 +154,7 @@ The `json:metadata` block is embedded in the description because `TaskGet` retur
 
 This flow addresses a recurring failure: the user says "add a gate" or "verify it works" without specifying **how**, the agent invents a verification method, then finds it expensive at execution time and walks around it — closing the gate with an inline shortcut. The fix is a three-layer architecture that *never bothers the user during planning* and only surfaces a forced question when the agent genuinely can't proceed without one.
 
-**The whole flow is opt-in.** It activates only when you register the hooks below in `.claude/settings.json`. The slash command sits dormant without the hook — installing it alone does nothing.
+**The whole flow is opt-in.** It activates only when you register the hooks below in `.claude/settings.json`. The gate skills sit dormant without the hook — installing the plugin alone does nothing.
 
 ### Design principle — don't bombard the user during planning
 
@@ -170,15 +166,15 @@ Users who want questions will say "brainstorm". Users who ask for a gate during 
 |-------|------|--------------|
 | **Write-plan (silent tagging)** | Plan authoring | Detects gate-language in the brief ("verify", "prove", "gate", "first on one then all", "make sure", "don't proceed until"). Tags the resulting task with `userGate: true` + `tags: ["user-gate"]`. No user questions. Uses the stricter definition: strict user gates AND strict agent gates AND gray-in-between all get tagged. |
 | **Execute-plan (hard trigger via hook)** | Task close / stop | The PostToolUse + Stop hooks fire when a tagged task is closed. The agent must then assess each criterion and choose one of two paths (below). |
-| **`/specify-gate` slash command (dormant unless hook active)** | Execute-plan, only when the agent cannot proceed | Asked 3-4 structured questions to the user that lock down the HOW: observable outcome, proof mechanism, scope, failure policy. Produces a structured verify spec the agent consumes. |
+| **`specifying-gates` skill (dormant unless hook active)** | Execute-plan, only when the agent cannot proceed | Asks 3-4 structured questions to the user that lock down the HOW: observable outcome, proof mechanism, scope, failure policy. Produces a structured verify spec the agent consumes. |
 
 ### Agent decision at execute time
 
 When a tagged task comes up, the agent asks itself: **do I know *how* to verify this?**
 
 - **"Verify the `/health` endpoint returns 200"** → the HOW is self-evident. Agent just hits the endpoint, captures the output, posts `AC: <criterion> — PROVEN BY <evidence>`. No slash command needed. The hook sees the proof and passes.
-- **"Check it works"** → the HOW is vague. Agent invokes `/specify-gate`, which asks the user the 3-4 minimal questions, then uses the answers to execute real verification. No silent invention, no inline shortcut.
-- **Write-plan explicitly flagged `requiresUserSpecification: true`** → same path: invoke `/specify-gate`, ask the user.
+- **"Check it works"** → the HOW is vague. Agent invokes `specifying-gates`, which asks the user the 3-4 minimal questions, then uses the answers to execute real verification. No silent invention, no inline shortcut.
+- **Write-plan explicitly flagged `requiresUserSpecification: true`** → same path: invoke `specifying-gates`, ask the user.
 
 The user is only interrupted at execute time, and only when the alternative is the agent making something up.
 
@@ -186,7 +182,7 @@ The user is only interrupted at execute time, and only when the alternative is t
 
 Register both hooks in `.claude/settings.json` (see "Recommended Configuration" below for the exact JSON). Without them:
 - `writing-plans` still tags gates (harmless extra metadata).
-- `/specify-gate` still exists but is never triggered automatically.
+- `specifying-gates` still exists but is never triggered automatically.
 - Nothing enforces evidence at close — behavior is identical to vanilla.
 
 Install one hook or both. The PostToolUse hook catches per-task closures; the Stop hook catches end-of-plan "everything done" claims. They compose — both firing on the same session is fine.
@@ -400,36 +396,6 @@ Opt in via `.claude/settings.json`:
 
 See the header of `hooks/examples/pre-task-blockedby-enforce.sh` for the transcript-walking logic and the `SUPERPOWERS_BLOCKEDBY_GUARD=0` escape hatch.
 
-### Enforce per-task LLM/dispatch requirements
-
-Optional `PreToolUse` hook on `Agent` that reads the currently in_progress task's `json:metadata` fence and refuses Agent calls that disagree with its `subagentType`, `model`, or `dispatchBrief`. Use when a plan's tasks are sensitive to which tier runs them — empirical measurements, coordinator-quality work, zero-cost batches.
-
-If a task's metadata carries `{"model": "haiku"}` and the coordinator dispatches `model: "opus"`, this hook blocks the call with a stderr explaining the mismatch and three response options (retry with the required params, update metadata transparently, or escalate via AskUserQuestion).
-
-When the task has no dispatch requirement in metadata, the hook passes silently.
-
-Opt in via `.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/plugins/marketplaces/superpowers-cc-marketplace/hooks/examples/pre-agent-task-dispatch-validate.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-See the header of `hooks/examples/pre-agent-task-dispatch-validate.sh` for the transcript-walking logic and the `SUPERPOWERS_DISPATCH_GUARD=0` escape hatch. Metadata keys are documented in `skills/shared/task-format-reference.md`.
-
 ### Force Subagent Evidence on Return
 
 Optional `PostToolUse` hook on `Agent` that fires the moment a subagent's `tool_result` arrives — before the coordinator absorbs it and reports upward. If the in_progress task carries `requireEvidenceTokens` (multi-axis evidence requirement) or the `requireABCompare: true` shortcut, the hook checks that the subagent's report contains at least one token from each axis. Missing axes → block with stderr naming them, forcing immediate re-dispatch rather than "looks good" at close time.
@@ -502,9 +468,9 @@ Skills update automatically when you update the plugin:
 /plugin update superpowers-cc@superpowers-cc-marketplace
 ```
 
-## Upstream Compatibility
+## Upstream Relationship
 
-This fork tracks `obra/superpowers` main branch. Changes specific to Claude Code are additive - the core workflow remains compatible.
+This fork diverged from `obra/superpowers` at v5.x. Cross-harness support (Codex/Cursor/Gemini/OpenCode/Copilot) was removed on purpose and upstream is no longer tracked; the core skill philosophy is inherited, the Claude Code-native integrations are this fork's own.
 
 ## License
 
