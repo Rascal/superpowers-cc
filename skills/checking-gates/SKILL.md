@@ -34,6 +34,7 @@ If none of these apply, return to executing-plans without running this skill.
 3. Classify:
    - `requiresUserSpecification: true` → go to Step 2 path A.
    - Concrete `verifyCommand` + every `acceptanceCriteria` names an observable (sensor, HTTP status, file, log line, entity) → go to Step 2 path B.
+   - `verifyCommand: "(subagent)"` with a `subagentBrief` (proof mechanism is a subagent) → go to Step 2 path B.
    - Vague criteria ("it works", "is fine", "as expected", "properly") or missing `verifyCommand` → go to Step 2 path A.
 
 ### Step 2 — Route

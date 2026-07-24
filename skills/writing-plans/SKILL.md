@@ -361,6 +361,8 @@ At plan completion, write the task persistence file **in the same directory as t
 
 If the plan is saved to `docs/superpowers/plans/2026-01-15-feature.md`, the tasks file MUST be saved to `docs/superpowers/plans/2026-01-15-feature.md.tasks.json`.
 
+Descriptions are abbreviated in the example below — every real task description carries all four sections (Goal / Files / Acceptance Criteria / Verify) plus the `json:metadata` fence, per the rule above.
+
 ```json
 {
   "planPath": "docs/superpowers/plans/2026-01-15-feature.md",

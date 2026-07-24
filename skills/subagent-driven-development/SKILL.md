@@ -89,9 +89,10 @@ digraph process {
 ## Dispatching with Metadata
 
 When dispatching an implementer subagent:
-1. Read the task's description via TaskGet — metadata is embedded as a `json:metadata` code fence at the end
-2. Parse the metadata JSON and map fields (files, acceptanceCriteria, verifyCommand) to the implementer prompt sections
-3. The implementer should receive ALL structured data — don't make them parse it from prose
+1. Mark the task `in_progress` (TaskUpdate) before dispatching, so TaskList reflects the true set of running work (the same rule the parallel-dispatch path states explicitly).
+2. Read the task's description via TaskGet — metadata is embedded as a `json:metadata` code fence at the end
+3. Parse the metadata JSON and map fields (files, acceptanceCriteria, verifyCommand) to the implementer prompt sections
+4. The implementer should receive ALL structured data — don't make them parse it from prose
 
 ## Model Selection
 
