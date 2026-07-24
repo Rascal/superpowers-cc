@@ -72,14 +72,14 @@ TaskCreate:
 
     **Acceptance Criteria:**
     - [ ] Fresh instance spun up from scratch
-    - [ ] Sonnet subagent dispatched with its briefing (no inline shortcut)
+    - [ ] subagent dispatched with its briefing (no inline shortcut)
     - [ ] JIT event captured in notification_message
     - [ ] Manager scrape shows the event
 
     **Verify:** `./zoo.sh status <tag>` + `cat logs/<tag>.jsonl | tail -1`
 
     ```json:metadata
-    {"files": [], "verifyCommand": "./zoo.sh status v0.1.15 && cat logs/v0.1.15.jsonl | tail -1", "acceptanceCriteria": ["Fresh instance spun up from scratch", "Sonnet subagent dispatched with its briefing", "JIT event captured in notification_message", "Manager scrape shows the event"], "userGate": true, "tags": ["user-gate", "verification"]}
+    {"files": [], "verifyCommand": "./zoo.sh status v0.1.15 && cat logs/v0.1.15.jsonl | tail -1", "acceptanceCriteria": ["Fresh instance spun up from scratch", "subagent dispatched with its briefing", "JIT event captured in notification_message", "Manager scrape shows the event"], "userGate": true, "tags": ["user-gate", "verification"]}
     ```
 ```
 

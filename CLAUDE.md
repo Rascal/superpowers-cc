@@ -19,7 +19,8 @@ Before reworking skill design, workflow philosophy, or architecture, read the ex
 
 ## Scope
 
-- **Claude Code only.** This fork drops the upstream cross-harness support (Codex/Cursor/Gemini/OpenCode/Copilot) on purpose. Don't reintroduce it.
+- **Claude Code only, Opus/Fable-class models.** This plugin targets the Claude Code harness exclusively and is tuned for Opus/Fable-class models. The upstream cross-harness support was dropped on purpose — don't add support for other harnesses or CLIs.
+- **Never hardcode a model in skill text.** Don't name a specific model in skill instructions or examples. Skills defer model selection to the user's chosen model — the session model, or whatever a CLAUDE.md rule pins for subagents (this workflow pins Opus). Naming a model in operational guidance is drift waiting to happen; let the user's config decide. "Tuned for Opus/Fable-class" describes the tested target, not a value to bake into dispatches. The `subagent-driven-development` "Model Selection" section is the canonical pattern — inherit the session model, defer to CLAUDE.md.
 - **Zero runtime dependencies.** Skills and hooks rely only on the harness and standard shell tools. If a change needs an external tool or service, it belongs in its own plugin, not here.
 - **General-purpose skills.** Keep skills useful across different kinds of projects. Domain-, tool-, or workflow-specific helpers belong in a separate plugin.
 
@@ -28,3 +29,4 @@ Before reworking skill design, workflow philosophy, or architecture, read the ex
 - One concern per change — don't bundle unrelated edits.
 - Describe the problem a change solves, not just what it changed.
 - Keep `plugin.json` / `marketplace.json` / `package.json` versions in sync when bumping.
+- When the Claude Code harness changes, or before shipping skill/hook edits, run `bash scripts/check-tool-drift.sh` (then have Claude diff sections 2-5 against the live session's tools) to catch drift — renamed tools, invalid task statuses, dropped agent types — before it rots silently in skill and hook text.

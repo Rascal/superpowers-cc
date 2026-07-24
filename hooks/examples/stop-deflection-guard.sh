@@ -46,8 +46,8 @@
 #                                        Default: 1 (active).
 #
 # SUPERPOWERS_CONTEXT_LIMIT              Total context window in tokens.
-#                                        Default: 200000 (standard Opus).
-#                                        Set to 1000000 for Opus 1M mode.
+#                                        Default: 200000 (standard context).
+#                                        Set to 1000000 for 1M-context mode.
 #
 # SUPERPOWERS_DEFLECTION_THRESHOLD_PCT   Usage percentage below which phrases
 #                                        are treated as hard violations.

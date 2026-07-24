@@ -4,7 +4,7 @@ A personal Claude Code-only fork of [obra/superpowers](https://github.com/obra/s
 
 ## Why This Fork Exists
 
-The original Superpowers is designed as a cross-platform toolkit that works across multiple AI CLI tools (Claude Code, Codex, OpenCode, Gemini CLI). Features unique to Claude Code fall outside the scope of the upstream project due to its [cross-platform nature](https://github.com/obra/superpowers/pull/344#issuecomment-3795515617).
+Upstream Superpowers is a cross-platform toolkit, so features unique to Claude Code fall outside its scope. This fork is Claude Code-only — it drops the cross-harness machinery and builds directly on Claude Code's native capabilities, tuned for Opus/Fable-class models.
 
 This fork integrates Claude Code-native features into the Superpowers workflow.
 
@@ -470,7 +470,7 @@ Skills update automatically when you update the plugin:
 
 ## Upstream Relationship
 
-This fork diverged from `obra/superpowers` at v5.x. Cross-harness support (Codex/Cursor/Gemini/OpenCode/Copilot) was removed on purpose and upstream is no longer tracked; the core skill philosophy is inherited, the Claude Code-native integrations are this fork's own.
+This fork diverged from `obra/superpowers` at v5.x. Cross-harness support was removed on purpose and upstream is no longer tracked; the core skill philosophy is inherited, the Claude Code-native integrations are this fork's own.
 
 ## License
 

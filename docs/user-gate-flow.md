@@ -105,7 +105,7 @@ Over-tagging is cheap (one extra metadata field, no user impact). Under-tagging 
 
 ### HOW-specification signal
 
-When the user's message specifies the HOW concretely (e.g., "verify `sensor.foo = idle`", "run `pytest tests/e2e.py`", "dispatch a Sonnet subagent against brief X"), encode it directly in `verifyCommand` and `acceptanceCriteria`. No further action needed at plan time.
+When the user's message specifies the HOW concretely (e.g., "verify `sensor.foo = idle`", "run `pytest tests/e2e.py`", "dispatch a subagent against brief X"), encode it directly in `verifyCommand` and `acceptanceCriteria`. No further action needed at plan time.
 
 When the user's message leaves the HOW ambiguous ("check it works", "make sure it's fine"), set an additional metadata field:
 
@@ -197,7 +197,7 @@ No user questions asked. Plan is written and saved.
 
 Four questions. User answers:
 - **Outcome:** "`sensor.marstek_battery_<suffix>_optimization_status` reads `idle` AND JIT notification fires within 10s of recalculate"
-- **Mechanism:** "Sonnet subagent using `instances/<tag>/seed-briefing.md` as prompt"
+- **Mechanism:** "subagent using `instances/<tag>/seed-briefing.md` as prompt"
 - **Scope:** "one instance per minor version"
 - **Failure:** "reopen the task, do not block the plan"
 - **Subagent brief:** *(user pastes the briefing template)*
@@ -206,7 +206,7 @@ Metadata updated, `requiresUserSpecification` removed. Returns control to `check
 
 **Back in `checking-gates` (Task 7):**
 
-HOW is now concrete on all three axes. Dispatch the Sonnet subagent, capture the real output, post:
+HOW is now concrete on all three axes. Dispatch the subagent, capture the real output, post:
 
 ```
 Gate: Task 7 E2E on one instance
@@ -238,5 +238,5 @@ All design-doc open items have been delivered:
 
 ### Remaining quality questions (not blocking)
 
-- **`requiresUserSpecification` fire rate:** 0/1 in the single live opus-4.7 session. Step 5 self-check targets this; effectiveness is unverified — needs 2-3 more live sessions with varied vague phrasings to confirm.
-- **Multi-harness testing:** only exercised on Claude Code via Opus 4.7. Sonnet/Haiku behavior, and Cursor/Gemini/Codex harness behavior, untested.
+- **`requiresUserSpecification` fire rate:** 0/1 in the single live session. Step 5 self-check targets this; effectiveness is unverified — needs 2-3 more live sessions with varied vague phrasings to confirm.
+- **Model coverage:** exercised on Claude Code with Opus-class models; Fable-class behavior is not yet separately verified.
