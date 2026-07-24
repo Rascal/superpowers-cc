@@ -1,7 +1,7 @@
 {
   "name": "superpowers-cc",
   "description": "Claude Code-only Superpowers: native task management and CC-specific workflow skills",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "author": {
     "name": "Rascal",
     "email": "anton@bobrik.org"
