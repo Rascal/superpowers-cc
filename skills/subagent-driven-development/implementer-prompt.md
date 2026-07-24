@@ -121,6 +121,7 @@ Agent tool (subagent_type: general-purpose):
     - What you tested and test results
     - Self-review findings (if any)
     - Any issues or concerns
+    - **Incidental findings:** important things you noticed OUTSIDE your task — bugs/risks in nearby code, a wrong plan/spec assumption, a better approach. Report them (don't fix them here, don't stay silent). "None" is fine.
 
     Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need

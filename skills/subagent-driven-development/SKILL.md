@@ -118,6 +118,8 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+**Incidental findings (any status):** the implementer may surface something it found outside its task — a bug/risk in nearby code, a plan/spec problem, a better approach. Triage it: if it's a real issue, `TaskCreate` a follow-up (or raise it to the user) so it's tracked; if it affects the current task, fold it in before review. Don't let a surfaced bug evaporate into a "noted" line.
+
 ## Escalating Questions to Your Human Partner
 
 Before ANY execution-time AskUserQuestion — plan-scripted or relayed from an implementer:
