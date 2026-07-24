@@ -81,7 +81,7 @@ for line in lines:
             status = inp.get("status")
             if status == "in_progress":
                 current_inprogress = tid
-            elif status in ("completed", "cancelled", "deleted") and current_inprogress == tid:
+            elif status in ("completed", "deleted") and current_inprogress == tid:
                 current_inprogress = None
             try:
                 if int(tid) >= next_id:

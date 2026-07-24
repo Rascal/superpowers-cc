@@ -9,15 +9,14 @@
 #   1. Walk the transcript, build {id → {status, blockedBy}}.
 #   2. If the target taskId has any blockedBy entry whose current status
 #      is not "completed", refuse with exit=2 and stderr listing blockers.
-#   3. All other TaskUpdate shapes (status=pending|cancelled|deleted|
-#      completed, description/priority updates) pass through.
+#   3. All other TaskUpdate shapes (status=pending|deleted|completed,
+#      description/priority updates) pass through.
 #
 # ## Why PreToolUse (not Post)
 #
 # Starting work on a task without its prerequisites is the actual damage.
 # PreToolUse refuses the transition; the coordinator has to close the
-# blockers first or explain why they're irrelevant by closing them as
-# cancelled/deleted.
+# blockers first or explain why they're irrelevant by deleting them.
 #
 # ## Escape hatch
 #
@@ -181,8 +180,8 @@ trace "$TASK_ID" "block" "missing=$MISSING_COUNT"
     echo "    task)? If yes, close the blocker properly with TaskUpdate"
     echo "    status=completed AND post the evidence for it — then retry."
     echo "  • Did a recent plan revision render the blocker obsolete? If yes,"
-    echo "    TaskUpdate the blocker to status=cancelled with a one-line reason"
-    echo "    in the description — then retry."
+    echo "    TaskUpdate the blocker to status=deleted, stating the one-line"
+    echo "    reason it's obsolete — then retry."
     echo
     echo "STEP 2 — If it IS a real blocker, choose one:"
     echo "  (a) Do the blocker's work first, close it with evidence, then"

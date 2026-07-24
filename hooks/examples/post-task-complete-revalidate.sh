@@ -426,7 +426,7 @@ if [[ "$IS_GATE" != "true" ]]; then
         echo "     line summarising what you observed (e.g. 'tests pass 12/12',"
         echo "     'file created', 'endpoint returned 200') — THEN reclose."
         echo "  3. Is this task genuinely complete or did you move on out of"
-        echo "     inertia? Consider status=cancelled with a reason, not"
+        echo "     inertia? Consider status=deleted with a reason, not"
         echo "     completed, if the work wasn't actually done."
         echo
         echo "What NOT to do: do NOT reclose with status=completed and silence"
