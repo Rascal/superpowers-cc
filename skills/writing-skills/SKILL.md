@@ -283,9 +283,9 @@ Use skill name only, with explicit requirement markers:
 - ✅ Good: `**REQUIRED SUB-SKILL:** Use superpowers-cc:test-driven-development`
 - ✅ Good: `**REQUIRED BACKGROUND:** You MUST understand superpowers-cc:systematic-debugging`
 - ❌ Bad: `See skills/testing/test-driven-development` (unclear if required)
-- ❌ Bad: `@skills/testing/test-driven-development/SKILL.md` (force-loads, burns context)
+- ❌ Bad: `@skills/testing/test-driven-development/SKILL.md` (won't auto-load in a skill body — the model still has to Read it)
 
-**Why no @ links:** `@` syntax force-loads files immediately, consuming 200k+ context before you need them.
+**Why no @ links:** `@`-import auto-expansion is a CLAUDE.md/memory-file and interactive-prompt behavior, not a skill-rendering step — an `@path` inside a SKILL.md body is NOT loaded by the harness, so the model still has to `Read` it. Use a plain reference (name the skill, or a Markdown link to a sibling file) so files stay load-on-demand — the Agent Skills standard.
 
 ## Flowchart Usage
 
