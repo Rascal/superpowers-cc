@@ -89,7 +89,7 @@ Tag any matching task with:
 
 Add the verbatim banner near the top of the description:
 
-> **USER-ORDERED GATE — NON-SKIPPABLE.** This task was requested by the user in the current conversation.
+> **USER-ORDERED GATE — NON-SKIPPABLE.** This task was requested by the user in the current conversation. It MUST NOT be closed by walking around it, by declaring it "verified inline", or by substituting a cheaper check. Close only after every item in `acceptanceCriteria` has been re-validated independently, with output captured.
 
 ### Three shades of gate
 
@@ -176,13 +176,13 @@ User's original brief: *"Build the zoo, verify it works on one instance first, t
 
 - Task 7: E2E on one instance
   ```json
-  {"userGate": true, "tags": ["user-gate"], "requiresUserSpecification": true, "gateScope": "one"}
+  {"userGate": true, "tags": ["user-gate"], "requiresUserSpecification": true, "gateScope": "once"}
   ```
   (Brief mentions "verify" + vague HOW → flagged for user specification)
 
 - Task 8: E2E on all instances (blocked by #7)
   ```json
-  {"userGate": true, "tags": ["user-gate"], "requiresUserSpecification": true, "gateScope": "all"}
+  {"userGate": true, "tags": ["user-gate"], "requiresUserSpecification": true, "gateScope": "per-target"}
   ```
 
 No user questions asked. Plan is written and saved.

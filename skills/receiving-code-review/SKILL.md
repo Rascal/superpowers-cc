@@ -102,10 +102,11 @@ IF reviewer suggests "implementing properly":
 ```
 FOR multi-item feedback:
   1. Clarify anything unclear FIRST
-  2. Then implement in this order:
-     - Blocking issues (breaks, security)
-     - Simple fixes (typos, imports)
-     - Complex fixes (refactoring, logic)
+  2. Then implement in severity order (the reviewer labels each Critical / Important / Minor):
+     - Critical (must fix) — breaks, security, data loss
+     - Important (should fix) — architecture, missing error handling, test gaps
+     - Minor (nice to have) — style, docs, optimization
+     Within a severity, do the quick, safe fixes before the complex ones.
   3. Test each fix individually
   4. Verify no regressions
 ```

@@ -426,13 +426,13 @@ See the header of `hooks/examples/post-agent-return-validate.sh` for the metadat
 
 ### Hook trace log
 
-All three user-gate hooks (post-complete revalidate, stop revalidate, pre-blockedby enforce) write one-line decision traces to `/tmp/claude-hooks/user-gate-trace.log` (override via `SUPERPOWERS_USERGATE_TRACE_LOG`). Tail during development with:
+All four user-gate hooks (post-complete revalidate, stop revalidate, pre-blockedby enforce, post-agent return validate) write one-line decision traces to `/tmp/claude-hooks/user-gate-trace.log` (override via `SUPERPOWERS_USERGATE_TRACE_LOG`). Tail during development with:
 
 ```
 tail -F /tmp/claude-hooks/user-gate-trace.log
 ```
 
-Each line is pipe-separated: `TIMESTAMP | hook-name | task=N | event | reason`. Events include `enter`, `skip`, `parsed`, `scanned`, `pass`, `block`, `error`. Skip reasons identify the short-circuit (e.g. `tool=Bash`, `status=pending`, `superpowers-active`, `guard=0`). This is the fastest way to see why a hook did or did not fire on a specific task.
+Each line is pipe-separated: `TIMESTAMP | hook-name | task=N | event | reason` (the `Stop`-event hook writes `session=<hash>` in the third field instead of `task=N`). Events include `enter`, `skip`, `parsed`, `scanned`, `pass`, `block`, `error`. Skip reasons identify the short-circuit (e.g. `tool=Bash`, `status=pending`, `guard=0`). This is the fastest way to see why a hook did or did not fire on a specific task.
 
 ### Block Low-Context Stop Excuses
 

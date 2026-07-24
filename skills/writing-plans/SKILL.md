@@ -287,7 +287,7 @@ Without the axes, "looks good, keep going" closes are legal; with axes, the coor
 
 **Do NOT ask the user questions during write-plan.** The opinionated default is "tag it and move on". Users who wanted questions said "brainstorm". If the user's brief is vague about a gate's HOW, the flag `requiresUserSpecification: true` routes the question to execute time where `specifying-gates` handles it in 3-5 short multiple-choice prompts.
 
-See `skills/shared/task-format-reference.md` → "User-Thrown Gates" for the full metadata schema with all six gate-related keys (`userGate`, `tags`, `requiresUserSpecification`, `gateScope`, `failurePolicy`, `subagentBrief`), and `docs/user-gate-flow.md` for the end-to-end flow.
+See `skills/shared/task-format-reference.md` → the "Metadata Schema" table for the full schema with all six gate-related keys (`userGate`, `tags`, `requiresUserSpecification`, `gateScope`, `failurePolicy`, `subagentBrief`) — and its "User-Thrown Gates" section for the gate workflow — plus `docs/user-gate-flow.md` for the end-to-end flow.
 
 #### TaskCreate description — full structured body, not a summary
 

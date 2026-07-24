@@ -59,6 +59,7 @@ If TaskList returned no tasks or tasks don't match plan:
    - Call `TaskUpdate` with `taskId` and `addBlockedBy: [list-of-blocking-task-ids]`
    - Do NOT skip this step - dependencies are essential for correct execution order
 4. Call `TaskList` and verify blockedBy relationships show correctly (e.g., "blocked by #1, #2")
+5. **Create the persistence file.** The bootstrap branch has no `.tasks.json` yet — write `<plan-path>.tasks.json` capturing the tasks you just created (id, subject, status, blockedBy, description) so the per-task "Sync `.tasks.json`" step below has a file to update.
 
 
 ### Step 2: Execute Tasks
