@@ -86,13 +86,16 @@ These thoughts mean STOP—you're rationalizing:
 
 ## Skill Priority
 
-When multiple skills could apply, use this order:
+Subagents skip this skill — so this is the coordinating (main) session's routing map.
 
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
-2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+- Build something new ("let's build X"): brainstorming → writing-plans → execute. Execute either by working the plan yourself (executing-plans) or delegating it task-by-task to fresh subagents (subagent-driven-development) — writing-plans' completion step asks you which.
+- Fix a bug (a reported defect): systematic-debugging → fix it under test-driven-development (a failing test that reproduces it, then the fix).
 
-"Let's build X" → brainstorming first, then writing-plans, then implementation skills.
-"Fix this bug" → debugging first, then domain-specific skills.
+Implementation-time skills fire per task, during execution — not as top-level steps: test-driven-development (tests first) and domain skills like frontend-design / dataviz when a task builds UI or charts. On the delegate path these run inside the implementer subagent (carried by its task instructions).
+
+When you delegate: the subagent gets ONE already-specified task and implements it — with TDD, and frontend-design/dataviz owning the task's layout/charts. It does not brainstorm or write plans (you did). It makes the task's own build choices; but a structural choice the plan never settled that reaches beyond this task — a shared data model, an API contract, a component boundary — it escalates back to you rather than guess (subagent-driven-development and the implementer prompt define when).
+
+Run the decision skill your request selects — brainstorming for a build, systematic-debugging for a bug — before you build or fix; and per the invoke-skills-first rule at the top, use any relevant skill before you respond.
 
 ## Skill Types
 
