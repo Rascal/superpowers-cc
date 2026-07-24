@@ -10,8 +10,8 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Commit-strategy opt-in notice — when the project carries the workflow file,
 # or a user-level default exists at ~/.claude/superpowers/ (project file wins
 # entirely, no merging).
-# The file is project-controlled (hostile) content: sanitize with the same
-# LC_ALL=C tr -d '[:cntrl:]' + iconv -c pass as the routing file BEFORE
+# The file is project-controlled (hostile) content: sanitize it with an
+# LC_ALL=C tr -d '[:cntrl:]' + iconv -c pass BEFORE
 # parsing. Stripping control bytes also collapses the file to one line, which
 # makes the single-line sed extraction immune to multi-line JSON formatting.
 # The extracted value is only compared, never embedded in the notice.

@@ -18,7 +18,7 @@ Valid values: `"per-task"` (the default) and `"at-end"`. Absent file, absent key
 
 **Delivery via the session-start notice, not skill prose.** When `commitStrategy` resolves to `at-end`, `hooks/session-start` injects a compact `<workflow-config-active>` block into session context, telling the agent: omit per-task Commit steps from plans, add one final "Commit the full implementation" task (blockedBy all implementation tasks), and instruct implementer subagents not to commit — the coordinator's final task makes the single commit. Knowledge arrives deterministically at session start; no voluntary file read is required. The skills themselves are untouched — no conditional instructions for agents to skip under load, and vanilla behavior cannot regress because the skill text did not change.
 
-**The config file is hostile content.** It is project-controlled, so the hook sanitizes it with the same pass as the routing file (`LC_ALL=C tr -d '[:cntrl:]'` + `iconv -c`) before parsing. The extracted value is only compared against `"at-end"`, never embedded in the emitted JSON.
+**The config file is hostile content.** It is project-controlled, so the hook sanitizes it with an `LC_ALL=C tr -d '[:cntrl:]'` + `iconv -c` pass before parsing. The extracted value is only compared against `"at-end"`, never embedded in the emitted JSON.
 
 **No enforcement gates in v1 — a deliberate, documented boundary.** Commit strategy is a workflow preference, not a cost or safety invariant: the failure mode of non-compliance is extra commits — today's default behavior, fully recoverable with an interactive rebase. Soft delivery via the session notice is the accepted reliability tradeoff. This means compliance depends on the agent honoring the notice at plan-writing and dispatch time; there is no hook that blocks a plan task containing a Commit step or an implementer prompt containing a commit instruction.
 
@@ -33,7 +33,7 @@ Valid values: `"per-task"` (the default) and `"at-end"`. Absent file, absent key
 
 ## Future directions (explicitly out of scope today)
 
-- **TaskCreate-gate hardening:** if live sessions show drift (plans still carrying per-task Commit steps while `at-end` is configured), a PreToolUse gate on TaskCreate could block plan tasks whose steps contain commit commands — same self-teaching block-message pattern as the model-tier gate.
+- **TaskCreate-gate hardening:** if live sessions show drift (plans still carrying per-task Commit steps while `at-end` is configured), a PreToolUse gate on TaskCreate could block plan tasks whose steps contain commit commands — same self-teaching block-message pattern the example gate hooks use.
 - **More workflow keys:** `workflow.json` is deliberately named generically; future workflow preferences can live alongside `commitStrategy` without a new file or lookup mechanism.
 
 ## Verifying it works
